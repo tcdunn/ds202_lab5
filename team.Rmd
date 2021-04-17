@@ -1,0 +1,128 @@
+---
+title: "individual"
+author: "Tanner Dunn"
+date: "4/16/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+
+acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
+person <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
+```
+
+1.
+```{r}
+ggplot(acc, aes(wday(DAY_WEEK, label = T))) + geom_bar() + ggtitle("Accidents Occured Per Day of The Week") + xlab("Day")
+```
+
+In this visual it is clear the weekend(Friday - Sunday) has the most accidents.
+
+
+2
+```{r}
+q2 <- person %>%
+  filter(INJ_SEV == 4)
+head(q2, 15)
+```
+
+3
+
+```{r}
+q3_part1 <- q2 %>%
+  select(STATE, MAKE, INJ_SEV) %>%
+  group_by(STATE, MAKE) %>%
+  summarise(count = n())
+
+q3_part2 <- q3_part1 %>%
+  na.omit %>%
+  group_by(STATE) %>%
+  top_n(1, count)
+
+head(q3_part2, 50)
+```
+
+4.)
+
+I could not get map_data to compile and I looked all over the internet and tried adding and removing different libraries and it wouldn't compile. I am going to leave this code snipit out so that the rest of problems compile
+```{r}
+names_dat <- readxl::read_xlsx("C:/Spring2021/ds202/names.xlsx")
+names_dat$`State Code` = as.numeric(names_dat$`State Code`)
+state_codes = names_dat %>% group_by(`State Name`, `State Code`) %>% summarise(n = n()) %>% dplyr::select(`State Name`, `State Code`)
+
+#state <- map_data("state")
+#dat1 <- q2 %>% group_by(STATE,MAKE) %>% 
+#  right_join(state,by=c('STATE'='group')) %>% 
+#  summarize(avgLong=mean(long),avgLat=mean(lat))
+
+#ggplot(state,aes(x='long',y='lat')) + geom_polygon(aes(group=group)) + geom_text(aes(label=MAKE),data=dat1)
+
+```
+
+5.
+```{r}
+q5 <-left_join(person, acc, by="ST_CASE")
+head(q5, 2)
+```
+
+
+6
+```{r}
+q6 <- q5 %>%
+  count(DAY_WEEK, HOUR.x, SEX) %>%
+  filter(HOUR.x < 24)
+ggplot(q6, aes(x=HOUR.x, y = n, colour = factor(SEX))) + geom_point() + facet_wrap(~ DAY_WEEK) + ggtitle("Accidents In Relation to Day, Hour, and Gender") + xlab("Hour of the Day") + ylab("Number of Accidents")
+```
+
+Here it seems that men have the most accidents and these accidents are typically peak around 5pm and these rates are higher on the weekend
+
+
+7.
+
+Again I had another issue with mapping_data, this might work on your end but it doesn't compile on mine. It's hard to test but any partial credit
+for having the right idea would be greatly appreciated. 
+
+```{r}
+#state <- map_data("state")
+#c <- map_data("county")
+
+#dat2 <- q2 %>% 
+#  group_by(COUNTY) %>% 
+#  summarize(count=n())
+
+#dat3 <- full_join(c,dat2,by=c('group'='COUNTY'))
+
+#ggplot(dat3, aes(x=long,y=lat)) + geom_polygon(aes(group=group, fill = count))
+```
+
+Here again I was unable to use map_data. Im hoping on your end this will hopefully run. I commented out everything after using map_data so it will still run generate the markdown on my end. 
+
+I apologize for this inconvenience. I really tried everything I could find on the internet and I unistalled and reinstalled r and had no success.
+8.
+```{r}
+
+summer = q2 %>% filter(MONTH == 6 | MONTH == 7 | MONTH == 8)
+winter = q2 %>% filter(MONTH == 1 | MONTH == 2 | MONTH == 12)
+
+summer_state_deaths = left_join(summer, state_codes, by= c("STATE" = "State Code")) %>% 
+  group_by(`State Name`) %>% summarise(summer_deaths = n()) %>% 
+  mutate(`State Name` = tolower(`State Name`))
+
+winter_state_deaths = left_join(winter, state_codes, by= c("STATE" = "State Code")) %>% 
+  group_by(`State Name`) %>% 
+  summarise(winter_deaths = n()) %>% mutate(`State Name` = tolower(`State Name`))
+
+#counties <- map_data('county')
+
+#season_state_deaths = left_join(counties, summer_state_deaths, by = c("region" = "State Name"))
+#season_state_deaths = left_join(season_state_deaths, winter_state_deaths, by = c("region" = "State Name"))
+#season_state_deaths$diff = season_state_deaths$summer_deaths - season_state_deaths$winter_deaths
+
+#ggplot(season_state_deaths, aes(x=long, y=lat, fill=diff))+ geom_polygon(aes(group=group)) + scale_fill_gradient2(midpoint=0, low="blue", #mid="white", high="red")
+
+```
+
+
